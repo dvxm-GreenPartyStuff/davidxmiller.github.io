@@ -3,224 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <link rel="stylesheet" href="leaflet.css" />
-    <script src="leaflet-src.js"></script>
-    <script src="leaflet.ajax.js"></script>
-    <script src="heatmapColors.js"></script>
-    <script src="partyList.js"></script>
-    <script src="resultsByBox.js"></script>
+    <link rel="stylesheet" href="vendors\leaflet\leaflet.css" />
+    <link rel="stylesheet" href="css\map.css" />
+    <script src="src\map.js"></script>
+    <script src="vendors\leaflet\leaflet.js"></script>
+    <script src="vendors\google\analytics.js"></script>
+    <script src="data\heatmapColorsData.js"></script>
+    <script src="data\partyListData.js"></script>
+    <script src="data\resultsByBoxData.js"></script>
+    <script src="data\wardsGeoJson.js"></script>
+    <script src="data\pollingDistrictsGeoJson.js"></script>
 </head>
 <body style="position:absolute;height:96%;width:98%">
 <div id="map-element" style="position:absolute;height:100%;width:100%"  ></div>
-    <style>
-        .legend {
-            line-height: 18px;
-            color: #555;
-        }
-        .legend i {
-            width: 30px;
-            height: 18px;
-            float: left;
-            margin-right: 8px;
-            opacity: 0.7;
-        }
-    </style>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-      ga('create', 'UA-99978920-1', 'auto');
-      ga('send', 'pageview');
-
-    </script>
     <script>
 
-        var roundPreference = [
-            "1st Pref",
-            "2nd Pref",
-            "3rd Pref",
-            "4th Pref",
-            "5th Pref"
-        ];
-
-        var selected_party = "Green";
-        var selected_round = 0;
-
-        function heatmapMinMaxStepSize(party) {
-            var minPercentage = 10;
-            var maxPercentage = 38;
-            var percentageRange = maxPercentage - minPercentage;
-            var heatmapPartyColors = heatmapAllPartyColors[party];
-            var stepSizePercentage = Math.ceil(percentageRange / heatmapPartyColors.length);
-            return {
-                minPercentage: minPercentage,
-                maxPercentage: maxPercentage,
-                stepSizePercentage: stepSizePercentage
-            }
-        }
-
-        function getColorOpacityFromPercentage(party, percentage) {
-            if (percentage === undefined || percentage === null || percentage === 0) {
-                return ['#ffffff', 0.0];
-            }
-            var heatmapPartyColors = heatmapAllPartyColors[party];
-            var minMaxStep = heatmapMinMaxStepSize(party);
-            var opacity = 0.7;
-            if (percentage < minMaxStep.minPercentage) {
-                return [heatmapPartyColors[0], opacity];
-            }
-            if (percentage > minMaxStep.maxPercentage) {
-                return [heatmapPartyColors[heatmapPartyColors.length - 1], opacity];
-            }
-            var colorIndex = (Math.floor(
-                (percentage - minMaxStep.minPercentage) /
-                 minMaxStep.stepSizePercentage)) + 1; // +1 as < min == color 0
-            return [heatmapPartyColors[colorIndex], opacity];
-        }
-
-        function styleForFeature(feature) {
-            var party = selected_party;
-            var round = selected_round;
-            var averagePercentageForPartyForRoundAcrossBallotBoxes = 0;
-            if (feature.properties["BALLOT_BOXES"] !== undefined) {
-                // There can be multiple boxes per polling district.
-                // If this is the case then sum the votes across the ballot boxes
-                var summedPercentageVotesForPartyForRoundAcrossBallotBoxes = 0;
-                for (var i = 0; i < feature.properties["BALLOT_BOXES"].length; i++) {
-                    var ballotBoxNumber = feature.properties["BALLOT_BOXES"][i];
-                    if (resultsByBox[ballotBoxNumber] === undefined) {
-                        summedPercentageVotesForPartyForRoundAcrossBallotBoxes = null;
-                        break;
-                    }
-                    summedPercentageVotesForPartyForRoundAcrossBallotBoxes +=
-                        resultsByBox[ballotBoxNumber].PartyVotesAsPercentage[party.toString()][round];
-                }
-                if (summedPercentageVotesForPartyForRoundAcrossBallotBoxes != null) {
-                    averagePercentageForPartyForRoundAcrossBallotBoxes =
-                        (summedPercentageVotesForPartyForRoundAcrossBallotBoxes / feature.properties["BALLOT_BOXES"].length);
-                }
-            }
-
-            var colOp = getColorOpacityFromPercentage(party, averagePercentageForPartyForRoundAcrossBallotBoxes);
-            return {
-                fillColor: colOp[0],
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '3',
-                fillOpacity: colOp[1]
-            };
-        }
-
-        function daveStyle(feature) {
-            return styleForFeature(feature);
-        }
+        var g_pollingGeoJsonLayer = {};
 
 
-        var map = L.map('map-element');
-        map.setView([55.949, -3.192], 13);
+        var g_selectedParty = "Green";
+        var g_selectedRound = 0;
+
+        calculateBallotBoxCandidateTotalVotesByRound();
+        calculateBallotBoxPercentageByRound();
+
+        var g_map = L.map('map-element', {
+            center: [55.949, -3.192],
+            zoom: 13,
+            maxZoom: 16,
+            minZoom: 11
+        });
 
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZGF2aWR4bWlsbGVyIiwiYSI6ImNqMjYwZzN3MzAwM3YzM29qd3V2ZTQzN2wifQ.rUqYUoqinVkGYoll82Vllg', {
-            maxZoom: 22,
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-            '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-            'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-            id: 'mapbox.light'
-        }).addTo(map);
+            id: 'mapbox.light',
+            attribution: '<a href=\"https://www.mapbox.com/about/maps/\" target=\"_blank\">&copy; Mapbox</a> <a href=\"http://www.openstreetmap.org/about/\" target=\"_blank\">&copy; OpenStreetMap</a> <a class=\"mapbox-improve-map\" href=\"https://www.mapbox.com/map-feedback/\" target=\"_blank\">Improve this map</a> <a href=\"https://www.digitalglobe.com/\" target=\"_blank\">&copy; DigitalGlobe</a>'
+        }).addTo(g_map);
 
+        g_pollingGeoJsonLayer = L.geoJson(pollingGeoJson, {
+            style:styleForPollingDistrictFeature,
+            onEachFeature:onEachPollingDistrictFeature
+        });
+        var pollingGeoJsonLayerGroup = L.layerGroup([g_pollingGeoJsonLayer]);
+        g_map.addLayer(pollingGeoJsonLayerGroup);
 
-        function zoomToFeature(e) {
-
-            var party = selected_party;
-            var round = selected_round;
-            var popupString = ""
-            for (var i = 0; i < e.target.feature.properties["BALLOT_BOXES"].length; i++) {
-                var box = e.target.feature.properties["BALLOT_BOXES"][i];
-                popupString +=  '<p>' + "Box: " + box + ", " +
-                    Math.floor(resultsByBox[box.toString()].PartyVotesAsPercentage[party.toString()][round]).toString() + "%" + '</p>'
-            }
-
-            var popup = L.popup()
-                .setLatLng(e.latlng)
-                .setContent('<p>' + popupString.toString() + '</p>')
-                .openOn(map);
-
-            map.openPopup(popup);
-        }
-        function onEachFeature(feature, layer) {
-            layer.on({
-                mouseover: highlightFeature,
-                mouseout: resetHighlight,
-                click: zoomToFeature
-            });
-        }
-        function resetHighlight(e) {
-            geojsonLayer.resetStyle(e.target);
-        }
-        function highlightFeature(e) {
-            var layer = e.target;
-
-            layer.setStyle({
-                weight: 3,
-                opacity: 1,
-                color: 'silver',
-                dashArray: ''
-            });
-
-            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                layer.bringToFront();
-            }
-        }
-
-        function makeLegend(map) {
-            var minMaxStep = heatmapMinMaxStepSize(selected_party);
-
-            var div = L.DomUtil.create('div', 'info legend');
-            var grades = [];
-            grades[0] = 0;
-            for (var j=1; j < (heatmapAllPartyColors[selected_party].length - 1); j++) {
-                grades[j] = minMaxStep.minPercentage + ((j - 1) * minMaxStep.stepSizePercentage);
-            }
-            grades[heatmapAllPartyColors[selected_party].length - 1] = minMaxStep.maxPercentage;
-            var labels = [];
-            var from, to;
-
-            for (var i = 0; i < grades.length; i++) {
-                from = grades[i];
-                to = grades[i + 1];
-
-                labels.push(
-                    '<i style="background:' + getColorOpacityFromPercentage(selected_party, from)[0] + '"></i> ' +
-                    from + (to ? '&ndash;' + to : '+'));
-            }
-
-            div.innerHTML = labels.join('<br>');
-            return div;
-        }
-
-        var geojsonLayer = L.geoJson.ajax("Polling_districts.geojson",
-            {style:daveStyle,
-            onEachFeature: onEachFeature}
-        );
-        geojsonLayer.addTo(map);
-
-
+        var wardsGeoJsonLayerGroup = L.layerGroup([L.geoJson(wardsGeoJson, { style:styleForWardBoundaryFeature })]);
+        g_map.addLayer(wardsGeoJsonLayerGroup);
+        
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
             return makeLegend(map);
         };
-        legend.addTo(map);
-
+        legend.addTo(g_map);
 
         var dataSelector = L.control({position: 'topright'});
         dataSelector.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info legend');
             var innerHTMLString = '';
             innerHTMLString += '<select id="selected_party">';
-            for (var i = 0; i < partyList.length; i++) {
-                innerHTMLString += '<option value="' + partyList[i] + '">' + partyList[i] + '</option>'
+            for (var i = 0; i < g_partyList.length; i++) {
+                innerHTMLString += '<option value="' + g_partyList[i] + '">' + g_partyList[i] + '</option>'
             }
             innerHTMLString += '</select>';
 
@@ -228,16 +70,25 @@
             div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
             return div;
         };
-        dataSelector.addTo(map);
+        dataSelector.addTo(g_map);
 
         var roundSelector = L.control({position: 'topright'});
-        roundSelector.onAdd = function (map) {
+        roundSelector.onAdd = function (map)
+        {
+            // DMFIXME: Better way that HTML on the fly?
+            var roundPreferenceData = [
+                "1st Pref",
+                "2nd Pref",
+                "3rd Pref",
+                "4th Pref",
+                "5th Pref"
+            ];
+
             var div = L.DomUtil.create('div', 'info legend');
             var innerHTMLString = '';
             innerHTMLString += '<select id="selected_round">';
-
-            for (var i = 0; i < roundPreference.length; i++) {
-                innerHTMLString += '<option value="' + i + '">' + roundPreference[i] + '</option>'
+            for (var i = 0; i < roundPreferenceData.length; i++) {
+                innerHTMLString += '<option value="' + i + '">' + roundPreferenceData[i] + '</option>'
             }
             innerHTMLString += '</select>';
 
@@ -245,28 +96,15 @@
             div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
             return div;
         };
-        roundSelector.addTo(map);
-
-        function redrawLayerAndLegend() {
-            geojsonLayer.eachLayer(function(layer) {
-                layer.setStyle(styleForFeature(layer.feature));
-            });
-
-            map.removeControl(legend);
-            legend = L.control({position: 'bottomright'});
-            legend.onAdd = function (map) {
-                return makeLegend(map);
-            };
-            legend.addTo(map);
-        }
+        roundSelector.addTo(g_map);
 
         document.querySelector('#selected_party').addEventListener('change', function (ev) {
-            selected_party = ev.target.value.toString();
+            g_selectedParty = ev.target.value.toString();
             redrawLayerAndLegend();
         });
 
         document.querySelector('#selected_round').addEventListener('change', function (ev) {
-            selected_round = ev.target.value.toString();
+            g_selectedRound = ev.target.value.toString();
             redrawLayerAndLegend();
         });
 

@@ -1,5 +1,5 @@
 
-var heatmapAllPartyColors = {
+var g_heatmapAllPartyColors = {
     "Green" : [
         '#f7fcf5',
         '#e5f5e0',
