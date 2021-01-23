@@ -35,9 +35,8 @@
             minZoom: 11
         });
 
-        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZGF2aWR4bWlsbGVyIiwiYSI6ImNqMjYwZzN3MzAwM3YzM29qd3V2ZTQzN2wifQ.rUqYUoqinVkGYoll82Vllg', {
-            id: 'mapbox.light',
-            attribution: '<a href=\"https://www.mapbox.com/about/maps/\" target=\"_blank\">&copy; Mapbox</a> <a href=\"http://www.openstreetmap.org/about/\" target=\"_blank\">&copy; OpenStreetMap</a> <a class=\"mapbox-improve-map\" href=\"https://www.mapbox.com/map-feedback/\" target=\"_blank\">Improve this map</a> <a href=\"https://www.digitalglobe.com/\" target=\"_blank\">&copy; DigitalGlobe</a>'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
         }).addTo(g_map);
 
         g_pollingGeoJsonLayer = L.geoJson(pollingGeoJson, {
