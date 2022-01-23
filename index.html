@@ -31,12 +31,17 @@
         var g_map = L.map('map-element', {
             center: [55.949, -3.192],
             zoom: 13,
-            maxZoom: 16,
+            maxZoom: 18,
             minZoom: 11
         });
 
-        L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
+            tileSize: 512,
+            maxZoom: 18,
+            zoomOffset: -1,
+            id: 'mapbox/light-v10',
+            accessToken: 'pk.eyJ1IjoiZGF2aWR4bWlsbGVyIiwiYSI6ImNqMjYwZzN3MzAwM3YzM29qd3V2ZTQzN2wifQ.rUqYUoqinVkGYoll82Vllg'
         }).addTo(g_map);
 
         g_pollingGeoJsonLayer = L.geoJson(pollingGeoJson, {

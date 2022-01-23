@@ -160,7 +160,7 @@ var g_resultsByBox = {
                 "Votes": [51, 11, 8, 12, 16, 74]
             },
             {
-                "Candidate": "",
+                "Candidate": "Peter SIDOR",
                 "Party": "Other",
                 "Votes": [0, 5, 14, 28, 63, 16]
             }]
@@ -507,14 +507,14 @@ var g_resultsByBox = {
         ]
     },
     "66": {
-        "Results": [{"Candidates": "Nigel BAGSHAW", "Party": "Green", "Votes": [34, 69, 43, 7, 7, 6, 4, 0]},
-            {"Candidates": "Gavin BARRIE", "Party": "SNP", "Votes": [97, 33, 15, 4, 1, 2, 2, 7]},
-            {"Candidates": "James DALGLEISH", "Party": "Labour", "Votes": [47, 34, 30, 32, 13, 6, 1, 0]},
-            {"Candidates": "Tom LAIRD", "Party": "Other", "Votes": [1, 3, 5, 9, 15, 17, 5, 4]},
-            {"Candidates": "Max MITCHELL", "Party": "Tory", "Votes": [24, 78, 13, 5, 7, 5, 20, 6]},
-            {"Candidates": "Hal OSLER", "Party": "LibDem", "Votes": [34, 34, 56, 25, 12, 5, 1, 0]},
-            {"Candidates": "Iain  WHYTE", "Party": "Tory", "Votes": [82, 34, 10, 5, 2, 0, 13, 21]},
-            {"Candidates": "Tina WOOLNOUGH", "Party": "Other", "Votes": [5, 11, 34, 25, 11, 14, 2, 8]}]
+        "Results": [{"Candidate": "Nigel BAGSHAW", "Party": "Green", "Votes": [34, 69, 43, 7, 7, 6, 4, 0]},
+            {"Candidate": "Gavin BARRIE", "Party": "SNP", "Votes": [97, 33, 15, 4, 1, 2, 2, 7]},
+            {"Candidate": "James DALGLEISH", "Party": "Labour", "Votes": [47, 34, 30, 32, 13, 6, 1, 0]},
+            {"Candidate": "Tom LAIRD", "Party": "Other", "Votes": [1, 3, 5, 9, 15, 17, 5, 4]},
+            {"Candidate": "Max MITCHELL", "Party": "Tory", "Votes": [24, 78, 13, 5, 7, 5, 20, 6]},
+            {"Candidate": "Hal OSLER", "Party": "LibDem", "Votes": [34, 34, 56, 25, 12, 5, 1, 0]},
+            {"Candidate": "Iain  WHYTE", "Party": "Tory", "Votes": [82, 34, 10, 5, 2, 0, 13, 21]},
+            {"Candidate": "Tina WOOLNOUGH", "Party": "Other", "Votes": [5, 11, 34, 25, 11, 14, 2, 8]}]
     },
     "67": {
         "Results" : [ { "Candidate" : "Nigel BAGSHAW","Party" : "Green","Votes" : [115,140,66,26,14,12,9,2] },
